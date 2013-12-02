@@ -120,7 +120,7 @@ class Connector(object):
         if timestamp:
             self.add_timestamp(headers, timestamp=timestamp)
 
-        verify = 'https' in url and VERIFY_SSL
+        verify = url.startswith('https') and VERIFY_SSL
         self.output.write("Enabled ssl certificate verification: %s, for: %s\n"
             %(str(verify), url), 3)
 
