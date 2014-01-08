@@ -196,8 +196,7 @@ class Connector(object):
             self.output.print_err('Connector.fetch_content(); '
                 'HTTP Status-Code was:\nurl: %s\n%s'
                 % (url, str(connection.status_code)))
-
-        if connection.status_code in [200]:
+        else:
             self.output.write('New content downloaded for: %s\n'
                 % url, 4)
             return (True, connection.content, timestamp)
