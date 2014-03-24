@@ -102,7 +102,7 @@ class Connector(object):
         return headers
 
 
-    def fetch_url(self, url, headers=None, timestamp=None):
+    def fetch_url(self, url, headers=None, tpath=None, timestamp=None):
         """Fetches the url
 
         @param url: string
@@ -117,8 +117,8 @@ class Connector(object):
         if not headers:
             headers = self.headers
 
-        if timestamp:
-            self.add_timestamp(headers, timestamp=timestamp)
+        if timestamp or tpath:
+            self.add_timestamp(headers, tpath=tpath, timestamp=timestamp)
 
         verify = url.startswith('https') and VERIFY_SSL
         self.output.write("Enabled ssl certificate verification: %s, for: %s\n"
