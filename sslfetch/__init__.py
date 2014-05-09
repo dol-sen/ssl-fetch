@@ -14,6 +14,4 @@
 
 '''
 
-version = 'Git'
-
-License = 'GPL-2'
+__version__ = 'Git'
