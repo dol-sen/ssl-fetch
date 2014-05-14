@@ -102,8 +102,8 @@ class Connector(object):
         return headers
 
 
-    def fetch_url(self, url, headers=None, tpath=None, timestamp=None):
-        """Fetches the url
+    def connect_url(self, url, headers=None, tpath=None, timestamp=None):
+        """Establishes a verified connection to the specified url
 
         @param url: string
         @param headers: dictionary, optional headers to use
@@ -124,9 +124,9 @@ class Connector(object):
         self.output.write("Enabled ssl certificate verification: %s, for: %s\n"
             %(str(verify), url), 3)
 
-        self.output.write('Connector.fetch_url(); headers = %s\n'
+        self.output.write('Connector.connect_url(); headers = %s\n'
             %str(headers), 4)
-        self.output.write('Connector.fetch_url(); connecting to opener\n', 2)
+        self.output.write('Connector.connect_url(); connecting to opener\n', 2)
 
         try:
             connection = requests.get(
@@ -136,17 +136,17 @@ class Connector(object):
                 proxies=self.proxies,
                 )
         except SSLError as error:
-            self.output.print_err('Connector.fetch_url(); Failed to update the '
+            self.output.print_err('Connector.connect_url(); Failed to update the '
                 'mirror list from: %s\nSSLError was:%s\n'
                 % (url, str(error)))
         except Exception as error:
-            self.output.print_err('Connector.fetch_url(); Failed to retrieve '
+            self.output.print_err('Connector.connect_url(); Failed to retrieve '
                 'the content from: %s\nError was: %s\n'
                 % (url, str(error)))
 
-        self.output.write('Connector.fetch_url() HEADERS = %s\n'
+        self.output.write('Connector.connect_url() HEADERS = %s\n'
             %str(connection.headers), 4)
-        self.output.write('Connector.fetch_url() Status_code = %i\n'
+        self.output.write('Connector.connect_url() Status_code = %i\n'
             % connection.status_code, 2)
         return connection
 
@@ -177,7 +177,7 @@ class Connector(object):
         if tpath:
             fheaders = self.add_timestamp(fheaders, tpath)
 
-        connection = self.fetch_url(url, fheaders)
+        connection = self.connect_url(url, fheaders)
 
         headers = self.normalize_headers(connection.headers)
 
