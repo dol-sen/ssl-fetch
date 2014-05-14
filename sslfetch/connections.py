@@ -71,7 +71,7 @@ class Connector(object):
     """
 
     def __init__(self, output, proxies, useragent):
-        """
+        """Connector __init__()
 
         @param output: logger or printing class to use.
             required sub functions are:
@@ -92,7 +92,14 @@ class Connector(object):
 
 
     def add_timestamp(self, headers, tpath=None, timestamp=None):
-        """for possilble future caching of the list"""
+        """For possilble future caching of the list
+
+        @param headers: dictionary, optional headers to use
+        @param tpath: string, optional filepath to a timestamp file
+                      to use in the headers
+        @param timestamp: string, optional timestamp to use in the headers
+        @rtype: dictionary of updated headers
+        """
         if tpath and os.path.exists(tpath):
             with fileopen(tpath,'r') as previous:
                 timestamp = previous.read()
@@ -111,7 +118,6 @@ class Connector(object):
                       to use in the headers
         @param timestamp: string, optional timestamp to use in the headers
         @rtype: request connection
-
         """
 
         if not headers:
