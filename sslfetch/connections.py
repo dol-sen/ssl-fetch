@@ -76,8 +76,8 @@ class Connector(object):
         @param output_dict: dictionary of: eg: {
             'info': loggging.info,    # function
             'error': logging.error,   # function
-            'args-info: {'level':2},  # dict for *args use
-            'args-error': {'level':0} # dict for *args use
+            'kwargs-info: {'level':2},  # dict for *args use
+            'kwargs-error': {'level':0} # dict for *args use
             }
             all output will be called output_dict[mode](msg, *args)
         @param proxies:
@@ -214,6 +214,12 @@ class Connector(object):
 
 
     def output(self, mode, msg):
-        args = self.output_dict['args-%s' % mode]
+        '''Generic output module which calls the mapped functions
+        from the class's init.
+
+        @param mode: string, one of ['info', 'error']
+        @param msg: string
+        '''
+        kwargs = self.output_dict['kwargs-%s' % mode]
         func = self.output_dict[mode]
-        func(msg, *args)
+        func(msg, kwargs)
