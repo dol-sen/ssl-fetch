@@ -70,7 +70,7 @@ class Connector(object):
     """Primary connection interface using the dev-python/requests package
     """
 
-    def __init__(self, output_dict, proxies, useragent):
+    def __init__(self, output_dict, proxies=None, useragent='ssl-fetch'):
         """Connector __init__()
 
         @param output_dict: dictionary of: eg: {
@@ -80,11 +80,13 @@ class Connector(object):
             'kwargs-error': {'level':0} # dict for *args use
             }
             all output will be called output_dict[mode](msg, *args)
-        @param proxies:
-        @param useragent: string, the User-Agent string to pass to the server
+        @param proxies: dictionary, default of None, it will try to
+            get them from the environment.
+        @param useragent: string, the User-Agent string to pass to the server,
+            default of 'ssl-fetch' is just due to parameter ordering
         """
         self.output_dict = output_dict
-        self.proxies = proxies
+        self.proxies = proxies or self.get_env_proxies()
         self.headers = {'Accept-Charset': 'utf-8',
             'User-Agent': useragent}
 
@@ -223,3 +225,12 @@ class Connector(object):
         kwargs = self.output_dict['kwargs-%s' % mode]
         func = self.output_dict[mode]
         func(msg, kwargs)
+
+
+    def get_env_proxies(self):
+        '''Sets proxies from the environment'''
+        self.proxies = {}
+        for proxy in ['http_proxy', 'https_proxy']:
+            prox = proxy.split('_')[0]
+            self.proxies[prox] = os.getenv(proxy)
+        return
