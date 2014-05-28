@@ -70,16 +70,20 @@ class Connector(object):
     """Primary connection interface using the dev-python/requests package
     """
 
-    def __init__(self, output, proxies, useragent):
+    def __init__(self, output_dict, proxies, useragent):
         """Connector __init__()
 
-        @param output: logger or printing class to use.
-            required sub functions are:
-                write, print_err
+        @param output_dict: dictionary of: eg: {
+            'info': loggging.info,    # function
+            'error': logging.error,   # function
+            'args-info: {'level':2},  # dict for *args use
+            'args-error': {'level':0} # dict for *args use
+            }
+            all output will be called output_dict[mode](msg, *args)
         @param proxies:
         @param useragent: string, the User-Agent string to pass to the server
         """
-        self.output = output
+        self.output_dict = output_dict
         self.proxies = proxies
         self.headers = {'Accept-Charset': 'utf-8',
             'User-Agent': useragent}
@@ -88,7 +92,7 @@ class Connector(object):
         # and output them now that we have an output assigned
         if VERIFY_MSGS:
             for msg in VERIFY_MSGS:
-                self.output.write(msg + '\n', 2)
+                self.output('info', msg + '\n')
 
 
     def add_timestamp(self, headers, tpath=None, timestamp=None):
@@ -105,7 +109,7 @@ class Connector(object):
                 timestamp = previous.read()
         if timestamp:
             headers['If-Modified-Since'] = timestamp
-            self.output.write('Current-modified: %s\n' % timestamp, 2)
+            self.output('info', 'Current-modified: %s\n' % timestamp)
         return headers
 
 
@@ -127,12 +131,12 @@ class Connector(object):
             self.add_timestamp(headers, tpath=tpath, timestamp=timestamp)
 
         verify = url.startswith('https') and VERIFY_SSL
-        self.output.write("Enabled ssl certificate verification: %s, for: %s\n"
-            %(str(verify), url), 3)
+        self.output('info', "Enabled ssl certificate verification: %s, for: %s\n"
+            %(str(verify), url))
 
-        self.output.write('Connector.connect_url(); headers = %s\n'
-            %str(headers), 4)
-        self.output.write('Connector.connect_url(); connecting to opener\n', 2)
+        self.output('info', 'Connector.connect_url(); headers = %s\n'
+            %str(headers))
+        self.output('info', 'Connector.connect_url(); connecting to opener\n')
 
         try:
             connection = requests.get(
@@ -142,18 +146,18 @@ class Connector(object):
                 proxies=self.proxies,
                 )
         except SSLError as error:
-            self.output.print_err('Connector.connect_url(); Failed to update the '
+            self.output('error', 'Connector.connect_url(); Failed to update the '
                 'mirror list from: %s\nSSLError was:%s\n'
                 % (url, str(error)))
         except Exception as error:
-            self.output.print_err('Connector.connect_url(); Failed to retrieve '
+            self.output('error', 'Connector.connect_url(); Failed to retrieve '
                 'the content from: %s\nError was: %s\n'
                 % (url, str(error)))
 
-        self.output.write('Connector.connect_url() HEADERS = %s\n'
-            %str(connection.headers), 4)
-        self.output.write('Connector.connect_url() Status_code = %i\n'
-            % connection.status_code, 2)
+        self.output('info', 'Connector.connect_url() HEADERS = %s\n'
+            %str(connection.headers))
+        self.output('info', 'Connector.connect_url() Status_code = %i\n'
+            % connection.status_code)
         return connection
 
 
@@ -195,16 +199,21 @@ class Connector(object):
             timestamp = None
 
         if connection.status_code in [304]:
-            self.output.write('Content already up to date: %s\n'
-                % url, 4)
-            self.output.write('Last-modified: %s\n' % timestamp, 4)
+            self.output('info', 'Content already up to date: %s\n'
+                % url)
+            self.output('info', 'Last-modified: %s\n' % timestamp)
         elif connection.status_code not in [200]:
-            self.output.print_err('Connector.fetch_content(); '
+            self.output('error', 'Connector.fetch_content(); '
                 'HTTP Status-Code was:\nurl: %s\n%s'
                 % (url, str(connection.status_code)))
         else:
-            self.output.write('New content downloaded for: %s\n'
-                % url, 4)
+            self.output('info', 'New content downloaded for: %s\n'
+                % url)
             return (True, connection.content, timestamp)
         return (False, '', '')
 
+
+    def output(self, mode, msg):
+        args = self.output_dict['args-%s' % mode]
+        func = self.output_dict[mode]
+        func(msg, *args)
