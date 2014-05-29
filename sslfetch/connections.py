@@ -194,9 +194,9 @@ class Connector(object):
         headers = self.normalize_headers(connection.headers)
 
         if 'last-modified' in headers:
-            timestamp = headers['last-modified']
+            timestamp = connection.headers[headers['last-modified']]
         elif 'date' in headers:
-            timestamp = headers['date']
+            timestamp = connection.headers[headers['date']]
         else:
             timestamp = None
 
