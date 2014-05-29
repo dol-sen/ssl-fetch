@@ -1,3 +1,5 @@
 *.patch
 *.py[co]
 build
+MANIFEST*
+dist
