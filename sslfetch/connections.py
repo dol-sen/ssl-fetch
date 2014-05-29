@@ -224,7 +224,7 @@ class Connector(object):
         '''
         kwargs = self.output_dict['kwargs-%s' % mode]
         func = self.output_dict[mode]
-        func(msg, kwargs)
+        func(msg, **kwargs)
 
 
     def get_env_proxies(self):
