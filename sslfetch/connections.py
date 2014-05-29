@@ -10,7 +10,7 @@
         'If-Modified-Since',
         'last-modified'
         custom
-    proxieso
+    proxies
 
 Copyright (C) 2013 Brian Dolbec <dolsen@gentoo.org>
 
@@ -74,12 +74,23 @@ class Connector(object):
         """Connector __init__()
 
         @param output_dict: dictionary of: eg: {
-            'info': loggging.info,    # function
+            'info': logging.info,    # function
             'error': logging.error,   # function
-            'kwargs-info: {'level':2},  # dict for *args use
-            'kwargs-error': {'level':0} # dict for *args use
+            'kwargs-info: {},  # dict for **kwargs use
+            'kwargs-error': {} # dict for **kwargs use
             }
-            all output will be called output_dict[mode](msg, *args)
+            all output will be called via the self.output() using:
+            def output(self, mode, msg):
+                kwargs = self.output_dict['kwargs-%s' % mode]
+                func = self.output_dict[mode]
+                func(msg, **kwargs)
+
+            NOTE: logging module primarily uses the setLevel()
+            so the kwargs-* parameters should be {}.
+            For custom output modules, the kwargs-* variables can be set
+            to whatever is needed to be passed to them.
+            eg:
+            'kwargs-info: {'level': 2},
         @param proxies: dictionary, default of None, it will try to
             get them from the environment.
         @param useragent: string, the User-Agent string to pass to the server,
@@ -98,7 +109,8 @@ class Connector(object):
 
 
     def add_timestamp(self, headers, tpath=None, timestamp=None):
-        """For possilble future caching of the list
+        """Adds an 'If-Modified-Since' header to the headers using
+        the information supplied via a tpath file or timestamp.
 
         @param headers: dictionary, optional headers to use
         @param tpath: string, optional filepath to a timestamp file
@@ -167,6 +179,7 @@ class Connector(object):
     def normalize_headers(headers, to_lower=True):
         """ py2, py3 compatibility function,
         since only py2 returns keys as lower()
+        This function maps a lower or upper case key to the original key.
         """
         if to_lower:
             return dict((x.lower(), x) for x in list(headers))
@@ -174,7 +187,7 @@ class Connector(object):
 
 
     def fetch_content(self, url, tpath=None):
-        """Fetch the content
+        """Fetch the content.
 
         @param url: string of the content to fetch
         @param headers: dictionary, optional headers to use
