@@ -52,7 +52,7 @@ else:
         VERIFY_MSGS = [
             "Failed to import and inject pyopenssl/SNI support into urllib3",
             "Disabling certificate verification",
-            "Error was:" + e
+            "Error was: {0}".format(e)
         ]
         VERIFY_SSL = False
 
