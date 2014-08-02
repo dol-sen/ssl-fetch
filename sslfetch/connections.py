@@ -163,6 +163,7 @@ class Connector(object):
                 %str(connection.headers))
             self.output('info', 'Connector.connect_url() Status_code = %i\n'
                 % connection.status_code)
+            return connection
         except SSLError as error:
             self.output('error', 'Connector.connect_url(); Failed to update the '
                 'mirror list from: %s\nSSLError was:%s\n'
@@ -171,7 +172,6 @@ class Connector(object):
             self.output('error', 'Connector.connect_url(); Failed to retrieve '
                 'the content from: %s\nError was: %s\n'
                 % (url, str(error)))
-        return connection
 
 
     @staticmethod
