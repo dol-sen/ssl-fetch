@@ -127,7 +127,7 @@ class Connector(object):
         return headers
 
 
-    def connect_url(self, url, headers=None, tpath=None, timestamp=None):
+    def connect_url(self, url, headers=None, tpath=None, timestamp=None, stream=False):
         """Establishes a verified connection to the specified url
 
         @param url: string
@@ -158,6 +158,7 @@ class Connector(object):
                 headers=headers,
                 verify=verify,
                 proxies=self.proxies,
+                stream=stream,
                 )
             self.output('info', 'Connector.connect_url() HEADERS = %s\n'
                 %str(connection.headers))
@@ -184,6 +185,24 @@ class Connector(object):
             return dict((x.lower(), x) for x in list(headers))
         return dict((x.upper(), x) for x in list(headers))
 
+    def fetch_file(self, url, buf=1024):
+        """Fetch blobs of files
+
+        @param url: string of the content to fetch
+        @param buf: integer of the buffer size
+        """
+        connection = self.connect_url(url, stream=True)
+        if connection.status_code in [404]:
+            self.output('error', 'Connector.fetch_file(); '
+                    'HTTP Status-Code was: %s\nurl:%s'
+                    % (str(connection.status_code), url))
+            return (False, '', '')
+        with open(url.split('/')[-1], 'wb') as blob:
+            for block in connection.iter_content(buf):
+                if not block:
+                    break
+                blob.write(block)
+        return (True, '', '')
 
     def fetch_content(self, url, tpath=None):
         """Fetch the content.
