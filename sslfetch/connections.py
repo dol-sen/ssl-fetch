@@ -145,12 +145,12 @@ class Connector(object):
             self.add_timestamp(headers, tpath=tpath, timestamp=timestamp)
 
         verify = url.startswith('https') and VERIFY_SSL
-        self.output('info', "Enabled ssl certificate verification: %s, for: %s\n"
+        self.output('debug', "Enabled ssl certificate verification: %s, for: %s\n"
             %(str(verify), url))
 
-        self.output('info', 'Connector.connect_url(); headers = %s\n'
+        self.output('debug', 'Connector.connect_url(); headers = %s\n'
             %str(headers))
-        self.output('info', 'Connector.connect_url(); connecting to opener\n')
+        self.output('debug', 'Connector.connect_url(); connecting to opener\n')
 
         try:
             connection = requests.get(
@@ -160,9 +160,9 @@ class Connector(object):
                 proxies=self.proxies,
                 stream=stream,
                 )
-            self.output('info', 'Connector.connect_url() HEADERS = %s\n'
+            self.output('debug', 'Connector.connect_url() HEADERS = %s\n'
                 %str(connection.headers))
-            self.output('info', 'Connector.connect_url() Status_code = %i\n'
+            self.output('debug', 'Connector.connect_url() Status_code = %i\n'
                 % connection.status_code)
             return connection
         except SSLError as error:
@@ -216,7 +216,6 @@ class Connector(object):
         else:
             self.output('info', 'New file downloaded for: %s\n'
                 % url)
-        print(save_path, "||", tpath)
         with open(save_path, 'wb') as handle:
             handle.writelines(connection.iter_content(buf))
 
