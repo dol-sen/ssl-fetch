@@ -135,7 +135,7 @@ class Connector(object):
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
         @param timestamp: string, optional timestamp to use in the headers
-        @rtype: request connection
+        @rtype: requests connection instance
         """
 
         if not headers:
@@ -173,6 +173,7 @@ class Connector(object):
             self.output('error', 'Connector.connect_url(); Failed to retrieve '
                 'the content from: %s\nError was: %s\n'
                 % (url, str(error)))
+        return None
 
 
     @staticmethod
@@ -185,51 +186,62 @@ class Connector(object):
             return dict((x.lower(), x) for x in list(headers))
         return dict((x.upper(), x) for x in list(headers))
 
-    def fetch_file(self, url, buf=1024):
+
+    def fetch_file(self, url, save_path, tpath=None, buf=1024):
         """Fetch blobs of files
 
         @param url: string of the content to fetch
+        @param save_path: file path to save the file to
+        @param tpath: string, optional filepath to a timestamp file
+                      to use in the headers
         @param buf: integer of the buffer size
+        @returns (success bool, content fetched , timestamp of fetched content,
+                 content headers returned)
         """
-        connection = self.connect_url(url, stream=True)
-        if connection.status_code in [404]:
+        connection = self.connect_url(url, tpath=tpath, stream=True)
+        if not connection:
+            return (False, '', '')
+
+        timestamp = self.get_timestamp(connection)
+
+        if connection.status_code in [304]:
+            self.output('info', 'File already up to date: %s\n'
+                % url)
+            self.output('info', 'Last-modified: %s\n' % timestamp)
+        elif connection.status_code in [404]:
             self.output('error', 'Connector.fetch_file(); '
                     'HTTP Status-Code was: %s\nurl:%s'
                     % (str(connection.status_code), url))
             return (False, '', '')
-        with open(url.split('/')[-1], 'wb') as blob:
-            for block in connection.iter_content(buf):
-                if not block:
-                    break
-                blob.write(block)
-        return (True, '', '')
+        else:
+            self.output('info', 'New file downloaded for: %s\n'
+                % url)
+        print(save_path, "||", tpath)
+        with open(save_path, 'wb') as handle:
+            handle.writelines(connection.iter_content(buf))
+
+        if tpath:
+            with fileopen(tpath, mode='w') as stamp:
+                stamp.write(str(timestamp) + '\n')
+
+        return (True, '', timestamp)
+
 
     def fetch_content(self, url, tpath=None):
         """Fetch the content.
 
         @param url: string of the content to fetch
-        @param headers: dictionary, optional headers to use
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
 
-        fheaders = self.headers
+        connection = self.connect_url(url, tpath=tpath)
+        if not connection:
+            return (False, '', '')
 
-        if tpath:
-            fheaders = self.add_timestamp(fheaders, tpath)
-
-        connection = self.connect_url(url, fheaders)
-
-        headers = self.normalize_headers(connection.headers)
-
-        if 'last-modified' in headers:
-            timestamp = connection.headers[headers['last-modified']]
-        elif 'date' in headers:
-            timestamp = connection.headers[headers['date']]
-        else:
-            timestamp = None
+        timestamp = self.get_timestamp(connection)
 
         if connection.status_code in [304]:
             self.output('info', 'Content already up to date: %s\n'
@@ -265,3 +277,17 @@ class Connector(object):
             prox = proxy.split('_')[0]
             self.proxies[prox] = os.getenv(proxy)
         return
+
+
+    def get_timestamp(self, connection):
+        '''Extracts the timestamp info from the connection headers
+
+        @param connection: requests connection instance
+        '''
+        if 'last-modified' in connection.headers:
+            timestamp = connection.headers['last-modified']
+        elif 'date' in connection.headers:
+            timestamp = connection.headers['date']
+        else:
+            timestamp = None
+        return timestamp
