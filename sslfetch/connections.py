@@ -202,12 +202,14 @@ class Connector(object):
         if not connection:
             return (False, '', '')
 
-        timestamp = self.get_timestamp(connection)
+        timestamp = self.get_last_modified(connection)
+        datestamp = self.get_date(connection)
 
         if connection.status_code in [304]:
             self.output('info', 'File already up to date: %s\n'
                 % url)
-            self.output('info', 'Last-modified: %s\n' % timestamp)
+            self.output('info', 'Date: %s\n' % datestamp)
+            return (True, '', '')
         elif connection.status_code in [404]:
             self.output('error', 'Connector.fetch_file(); '
                     'HTTP Status-Code was: %s\nurl:%s'
@@ -240,12 +242,13 @@ class Connector(object):
         if not connection:
             return (False, '', '')
 
-        timestamp = self.get_timestamp(connection)
+        timestamp = self.get_last_modified(connection)
+        datestamp = self.get_date(connection)
 
         if connection.status_code in [304]:
             self.output('info', 'Content already up to date: %s\n'
                 % url)
-            self.output('info', 'Last-modified: %s\n' % timestamp)
+            self.output('info', 'Date: %s\n' % datestamp)
         elif connection.status_code not in [200]:
             self.output('error', 'Connector.fetch_content(); '
                 'HTTP Status-Code was:\nurl: %s\n%s'
@@ -278,14 +281,20 @@ class Connector(object):
         return
 
 
-    def get_timestamp(self, connection):
+    def get_last_modified(self, connection):
         '''Extracts the timestamp info from the connection headers
 
         @param connection: requests connection instance
         '''
         if 'last-modified' in connection.headers:
             timestamp = connection.headers['last-modified']
-        elif 'date' in connection.headers:
+        else:
+            timestamp = None
+        return timestamp
+
+
+    def get_date(self, connection):
+        if 'date' in connection.headers:
             timestamp = connection.headers['date']
         else:
             timestamp = None
