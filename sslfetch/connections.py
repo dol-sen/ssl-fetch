@@ -120,7 +120,7 @@ class Connector(object):
         """
         if tpath and os.path.exists(tpath):
             with fileopen(tpath,'r') as previous:
-                timestamp = previous.read()
+                timestamp = previous.readline()
         if timestamp:
             headers['If-Modified-Since'] = timestamp
             self.output('info', 'Current-modified: %s\n' % timestamp)
