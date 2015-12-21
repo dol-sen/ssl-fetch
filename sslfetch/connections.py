@@ -31,6 +31,7 @@ Distributed under the terms of the GNU General Public License v2
 """
 
 import sys
+import time
 import os
 
 VERIFY_SSL = False
@@ -187,7 +188,7 @@ class Connector(object):
         return dict((x.upper(), x) for x in list(headers))
 
 
-    def fetch_file(self, url, save_path, tpath=None, buf=1024):
+    def fetch_file(self, url, save_path, tpath=None, buf=1024, climit=60):
         """Fetch blobs of files
 
         @param url: string of the content to fetch
@@ -195,6 +196,9 @@ class Connector(object):
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
         @param buf: integer of the buffer size
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
@@ -204,6 +208,9 @@ class Connector(object):
 
         timestamp = self.get_last_modified(connection)
         datestamp = self.get_date(connection)
+
+        if timestamp and not self.verify_cycle(tpath, climit):
+            return (False, '', '')
 
         if connection.status_code in [304]:
             self.output('info', 'File already up to date: %s\n'
@@ -228,12 +235,15 @@ class Connector(object):
         return (True, '', timestamp)
 
 
-    def fetch_content(self, url, tpath=None):
+    def fetch_content(self, url, tpath=None, climit=60):
         """Fetch the content.
 
         @param url: string of the content to fetch
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
@@ -244,6 +254,9 @@ class Connector(object):
 
         timestamp = self.get_last_modified(connection)
         datestamp = self.get_date(connection)
+
+        if timestamp and not self.verify_cycle(tpath, climit):
+            return (False, '', '')
 
         if connection.status_code in [304]:
             self.output('info', 'Content already up to date: %s\n'
@@ -299,3 +312,30 @@ class Connector(object):
         else:
             timestamp = None
         return timestamp
+
+
+    def verify_cycle(self, tpath, climit):
+        """Checks the mtime of a timestamp file against the mtime of the
+        current system time. If the difference of the two is less than the
+        climit provided then the mtime of the timestamp file gets updated
+        to the current system time.
+
+        @param tpath:  string, filepath to a timestamp file to use in the
+                       headers.
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
+        @rtype: bool
+        """
+        dtime = os.path.getctime(tpath)       # Mtime of timestamp file.
+        stime = time.mktime(time.localtime()) # Current system time
+        # Both times are measured in seconds from epoch.
+        # Seconds to minutes = seconds/60
+        time_diff = int((stime-dtime)/60)
+
+        if time_diff >= climit:
+            # Update the mtime of the timestamp file. A cycle has passed.
+            os.utime(tpath)
+            return True
+
+        return False
