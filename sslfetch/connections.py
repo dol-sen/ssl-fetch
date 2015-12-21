@@ -196,8 +196,9 @@ class Connector(object):
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
         @param buf: integer of the buffer size
-        @param climit: Minimum time limit before a cycle passes, allowing a file
-                       to be downloaded again. Default time is 60 minutes.
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
@@ -240,8 +241,9 @@ class Connector(object):
         @param url: string of the content to fetch
         @param tpath: string, optional filepath to a timestamp file
                       to use in the headers
-        @param climit: Minimum time limit before a cycle passes, allowing a file
-                       to be downloaded again. Default time is 60 minutes.
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
@@ -320,8 +322,9 @@ class Connector(object):
 
         @param tpath:  string, filepath to a timestamp file to use in the
                        headers.
-        @param climit: Minimum time limit before a cycle passes, allowing a file
-                       to be downloaded again. Default time is 60 minutes.
+        @param climit: Minimum time limit (minutes) before a cycle passes,
+                       allowing a file to be downloaded again. Default time is
+                       60 minutes.
         @rtype: bool
         """
         dtime = os.path.getctime(tpath)       # Mtime of timestamp file.
