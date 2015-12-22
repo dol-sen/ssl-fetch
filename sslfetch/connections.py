@@ -335,7 +335,7 @@ class Connector(object):
 
         if time_diff >= climit:
             # Update the mtime of the timestamp file. A cycle has passed.
-            os.utime(tpath)
+            os.utime(tpath, None) # None is a param needed for py2.7 compat.
             return True
 
         return False
