@@ -314,7 +314,7 @@ class Connector(object):
         return timestamp
 
 
-    def verify_cycle(self, tpath, climit):
+    def verify_cycle(self, tpath, climit, verify_only=False):
         """Checks the mtime of a timestamp file against the mtime of the
         current system time. If the difference of the two is less than the
         climit provided then the mtime of the timestamp file gets updated
@@ -325,6 +325,8 @@ class Connector(object):
         @param climit: Minimum time limit (minutes) before a cycle passes,
                        allowing a file to be downloaded again. Default time is
                        60 minutes.
+        @param verify_only: Optional boolean to turn on/off updating the time
+                            of the timestamp file.
         @rtype: bool
         """
         dtime = os.path.getctime(tpath)       # Mtime of timestamp file.
@@ -334,8 +336,9 @@ class Connector(object):
         time_diff = int((stime-dtime)/60)
 
         if time_diff >= climit:
-            # Update the mtime of the timestamp file. A cycle has passed.
-            os.utime(tpath, None) # None is a param needed for py2.7 compat.
+            if not verify_only:
+                # Update the mtime of the timestamp file. A cycle has passed.
+                os.utime(tpath, None) # None is a param needed for py2.7 compat.
             return True
 
         return False
