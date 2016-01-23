@@ -123,7 +123,7 @@ class Connector(object):
             with fileopen(tpath,'r') as previous:
                 timestamp = previous.readline()
         if timestamp:
-            headers['If-Modified-Since'] = timestamp
+            headers['If-Modified-Since'] = timestamp.strip()
             self.output('info', 'Current-modified: %s\n' % timestamp)
         return headers
 
