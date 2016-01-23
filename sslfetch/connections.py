@@ -104,6 +104,7 @@ class Connector(object):
         self.proxies = proxies or self.get_env_proxies()
         self.headers = {'Accept-Charset': 'utf-8',
             'User-Agent': useragent}
+        self._remaining = 0
 
         # check if there were any initialization messages
         # and output them now that we have an output assigned
@@ -207,7 +208,11 @@ class Connector(object):
         """
         if tpath and os.path.exists(tpath):
             if not self.verify_cycle(tpath, climit):
-                return (False, '', '')
+                self.output('warning',
+                            '  ** Re-fetch cycle timeout of %s minutes not yet '
+                            'reached... %s minutes remaining'
+                            % (climit, self._remaining))
+                return (True, '', '')
 
         connection = self.connect_url(url, tpath=tpath, stream=True)
         if not connection:
@@ -254,7 +259,11 @@ class Connector(object):
 
         if tpath and os.path.exists(tpath):
             if not self.verify_cycle(tpath, climit):
-                return (False, '', '')
+                self.output('warning',
+                            '  ** Re-fetch cycle timeout of %s minutes not yet '
+                            'reached... %s minutes remaining'
+                            % (climit, self._remaining))
+                return (True, '', '')
 
         connection = self.connect_url(url, tpath=tpath)
         if not connection:
@@ -340,11 +349,17 @@ class Connector(object):
         # Both times are measured in seconds from epoch.
         # Seconds to minutes = seconds/60
         time_diff = int((stime-dtime)/60)
+        self._remaining = 0
 
         if time_diff >= climit:
             if not verify_only:
                 # Update the mtime of the timestamp file. A cycle has passed.
                 os.utime(tpath, None) # None is a param needed for py2.7 compat.
             return True
+        elif not verify_only:
+            self._remaining = climit - time_diff
+            self.output('info', "Re-fetch cycle timeout of: "
+                        "%s minutes, Remaining: %s minutes "
+                        % (climit, self._remaining))
 
         return False
