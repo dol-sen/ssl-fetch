@@ -75,8 +75,11 @@ class Connector(object):
         """Connector __init__()
 
         @param output_dict: dictionary of: eg: {
-            'info': logging.info,    # function
-            'error': logging.error,   # function
+            'info': logging.info,            # function
+            'error': logging.error,          # function
+            'debug': logging.debug,          # function
+            'warning': logging.warning       # function
+            'exception': logging.exception   #function
             'kwargs-info: {},  # dict for **kwargs use
             'kwargs-error': {} # dict for **kwargs use
             }
@@ -168,11 +171,11 @@ class Connector(object):
             return connection
         except SSLError as error:
             self.output('error', 'Connector.connect_url(); Failed to update the '
-                'mirror list from: %s\nSSLError was:%s\n'
+                'mirror list from: %s\nSSL-fetch:SSLError was:%s\n'
                 % (url, str(error)))
         except Exception as error:
-            self.output('error', 'Connector.connect_url(); Failed to retrieve '
-                'the content from: %s\nError was: %s\n'
+            self.output('exception', 'Connector.connect_url(); Failed to retrieve '
+                'the content from: %s\nSSL-fetch:Error was: %s\n'
                 % (url, str(error)))
         return None
 
@@ -282,8 +285,9 @@ class Connector(object):
         @param mode: string, one of ['info', 'error']
         @param msg: string
         '''
-        kwargs = self.output_dict['kwargs-%s' % mode]
-        func = self.output_dict[mode]
+        kwargs = self.output_dict.get('kwargs-%s' % mode,
+                                      self.output_dict['kwargs-error'])
+        func = self.output_dict.get(mode, self.output_dict['error'])
         func(msg, **kwargs)
 
 
