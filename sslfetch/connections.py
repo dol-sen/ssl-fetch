@@ -202,15 +202,16 @@ class Connector(object):
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
+        if tpath and os.path.exists(tpath):
+            if not self.verify_cycle(tpath, climit):
+                return (False, '', '')
+
         connection = self.connect_url(url, tpath=tpath, stream=True)
         if not connection:
             return (False, '', '')
 
         timestamp = self.get_last_modified(connection)
         datestamp = self.get_date(connection)
-
-        if timestamp and not self.verify_cycle(tpath, climit):
-            return (False, '', '')
 
         if connection.status_code in [304]:
             self.output('info', 'File already up to date: %s\n'
@@ -248,15 +249,16 @@ class Connector(object):
                  content headers returned)
         """
 
+        if tpath and os.path.exists(tpath):
+            if not self.verify_cycle(tpath, climit):
+                return (False, '', '')
+
         connection = self.connect_url(url, tpath=tpath)
         if not connection:
             return (False, '', '')
 
         timestamp = self.get_last_modified(connection)
         datestamp = self.get_date(connection)
-
-        if timestamp and not self.verify_cycle(tpath, climit):
-            return (False, '', '')
 
         if connection.status_code in [304]:
             self.output('info', 'Content already up to date: %s\n'
