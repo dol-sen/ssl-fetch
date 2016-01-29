@@ -263,7 +263,7 @@ class Connector(object):
                             '  ** Re-fetch cycle timeout of %s minutes not yet '
                             'reached... %s minutes remaining'
                             % (climit, self._remaining))
-                return (True, '', '')
+                return (False, '', '')
 
         connection = self.connect_url(url, tpath=tpath)
         if not connection:
