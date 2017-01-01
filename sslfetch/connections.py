@@ -67,6 +67,14 @@ def fileopen(path, mode='r', enc="UTF-8"):
     return f
 
 
+def get_timestamp(tpath):
+    if tpath and os.path.exists(tpath):
+        with fileopen(tpath,'r') as previous:
+            timestamp = previous.readline()
+        return timestamp
+    return ""
+
+
 class Connector(object):
     """Primary connection interface using the dev-python/requests package
     """
@@ -123,9 +131,8 @@ class Connector(object):
         @param timestamp: string, optional timestamp to use in the headers
         @rtype: dictionary of updated headers
         """
-        if tpath and os.path.exists(tpath):
-            with fileopen(tpath,'r') as previous:
-                timestamp = previous.readline()
+        if tpath:
+            timestamp = get_timestamp(tpath)
         if timestamp:
             headers['If-Modified-Since'] = timestamp.strip()
             self.output('info', 'Current-modified: %s\n' % timestamp)
@@ -192,7 +199,7 @@ class Connector(object):
         return dict((x.upper(), x) for x in list(headers))
 
 
-    def fetch_file(self, url, save_path, tpath=None, buf=1024, climit=60):
+    def fetch_file(self, url, save_path, tpath=None, buf=1024, climit=60, timestamp=None):
         """Fetch blobs of files
 
         @param url: string of the content to fetch
@@ -203,6 +210,7 @@ class Connector(object):
         @param climit: Minimum time limit (minutes) before a cycle passes,
                        allowing a file to be downloaded again. Default time is
                        60 minutes.
+        @param timestamp: string, optional timestamp to use in the headers
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
@@ -244,7 +252,7 @@ class Connector(object):
         return (True, '', timestamp)
 
 
-    def fetch_content(self, url, tpath=None, climit=60):
+    def fetch_content(self, url, tpath=None, climit=60, timestamp=None):
         """Fetch the content.
 
         @param url: string of the content to fetch
@@ -253,6 +261,7 @@ class Connector(object):
         @param climit: Minimum time limit (minutes) before a cycle passes,
                        allowing a file to be downloaded again. Default time is
                        60 minutes.
+        @param timestamp: string, optional timestamp to use in the headers
         @returns (success bool, content fetched , timestamp of fetched content,
                  content headers returned)
         """
